@@ -4,13 +4,13 @@ import com.neurovault.cognitive_engine.entity.ProcessedData;
 import com.neurovault.cognitive_engine.repository.ProcessedDataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord; // EKLENEN IMPORT
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -20,11 +20,12 @@ public class KafkaConsumerService {
     private final ProcessedDataRepository processedDataRepository;
 
     @KafkaListener(topics = "raw-data-events", groupId = "cognitive-group")
-    public void consumeRawData(Object rawDataMap) {
-        log.info("Kafka'dan yeni ham veri yakalandı: {}", rawDataMap);
+    public void consumeRawData(ConsumerRecord<String, Map<String, Object>> record) {
 
         try {
-            java.util.Map<String, Object> data = (java.util.Map<String, Object>) rawDataMap;
+            Map<String, Object> data = record.value();
+            log.info("Kafka'dan ham veri ZARFTAN başarıyla çıkarıldı: {}", data);
+
             String realUserId = (String) data.get("userId");
 
             ProcessedData processed = ProcessedData.builder()

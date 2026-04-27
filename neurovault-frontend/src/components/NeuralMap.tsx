@@ -8,7 +8,7 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
   ssr: false,
 });
 
-export default function NeuralMap() {
+export default function NeuralMap({ refreshKey }: { refreshKey: number }) {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
 
@@ -69,7 +69,7 @@ export default function NeuralMap() {
     };
 
     fetchAndTransformData();
-  }, []);
+  }, [refreshKey]);
 
   if (loading)
     return (

@@ -19,14 +19,17 @@ public class KafkaConsumerService {
 
     private final ProcessedDataRepository processedDataRepository;
 
-     @KafkaListener(topics = "raw-data-events", groupId = "cognitive-group")
+    @KafkaListener(topics = "raw-data-events", groupId = "cognitive-group")
     public void consumeRawData(Object rawDataMap) {
-         log.info("Kafka'dan yeni ham veri yakalandı: {}", rawDataMap);
+        log.info("Kafka'dan yeni ham veri yakalandı: {}", rawDataMap);
 
         try {
+            java.util.Map<String, Object> data = (java.util.Map<String, Object>) rawDataMap;
+            String realUserId = (String) data.get("userId");
+
             ProcessedData processed = ProcessedData.builder()
                     .originalDataId("KAFKA_MSG")
-                    .userId("SYSTEM")
+                    .userId(realUserId != null ? realUserId : "UNKNOWN_USER")
                     .summary("Bu veri asenkron olarak analiz edildi.")
                     .keywords(Arrays.asList("analiz", "kafka", "neurovault"))
                     .processedAt(LocalDateTime.now())

@@ -5,6 +5,14 @@ spring:
   application:
     name: cognitive-engine
 
+  ai:
+    google:
+      genai:
+        api-key: ${API_KEY}
+        chat:
+          options:
+            model: gemini-3.0-pro
+
   datasource:
     url: jdbc:postgresql://localhost:5433/neurovault_db
     username: root

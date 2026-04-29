@@ -8,7 +8,13 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
   ssr: false,
 });
 
-export default function NeuralMap({ refreshKey }: { refreshKey: number }) {
+export default function NeuralMap({
+  refreshKey,
+  onNodeClick,
+}: {
+  refreshKey: number;
+  onNodeClick?: (node: any) => void;
+}) {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
 
@@ -44,6 +50,7 @@ export default function NeuralMap({ refreshKey }: { refreshKey: number }) {
             name: item.summary,
             val: 5,
             color: "#10b981",
+            originalContent: item.originalContent,
           });
           links.push({ source: "user-999", target: item.id });
 
@@ -88,7 +95,7 @@ export default function NeuralMap({ refreshKey }: { refreshKey: number }) {
   return (
     <div
       ref={containerRef}
-      className="w-full h-[600px] border border-zinc-800 rounded-xl overflow-hidden bg-black shadow-2xl shadow-blue-900/20"
+      className="w-full h-[600px] border border-zinc-800 rounded-xl overflow-hidden bg-black shadow-2xl shadow-blue-900/20 cursor-crosshair"
     >
       <ForceGraph2D
         width={dimensions.width}
@@ -98,6 +105,9 @@ export default function NeuralMap({ refreshKey }: { refreshKey: number }) {
         nodeColor="color"
         nodeRelSize={6}
         linkColor={() => "rgba(255,255,255,0.15)"}
+        onNodeClick={(node) => {
+          if (onNodeClick) onNodeClick(node);
+        }}
       />
     </div>
   );

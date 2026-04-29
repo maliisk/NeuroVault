@@ -29,7 +29,7 @@ export default function NoteInput({
       setTimeout(() => {
         onNoteAdded();
         setLoading(false);
-      }, 1500);
+      }, 5000);
     } catch (error) {
       console.error("Not fırlatılırken hata oluştu:", error);
       setLoading(false);

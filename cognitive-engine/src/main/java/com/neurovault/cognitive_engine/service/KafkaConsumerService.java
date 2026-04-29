@@ -34,6 +34,7 @@ public class KafkaConsumerService {
             ProcessedData processed = ProcessedData.builder()
                     .originalDataId("KAFKA_MSG")
                     .userId(realUserId != null ? realUserId : "UNKNOWN_USER")
+                    .originalContent(contentToAnalyze)
                     .summary(result.summary())
                     .keywords(result.keywords())
                     .processedAt(LocalDateTime.now())

@@ -5,19 +5,12 @@ spring:
   application:
     name: cognitive-engine
 
-  ai:
-    google:
-      genai:
-        api-key: ${API_KEY}
-        chat:
-          options:
-            model: gemini-3.0-pro
-
   datasource:
     url: jdbc:postgresql://localhost:5433/neurovault_db
     username: root
     password: rootpassword
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -33,6 +26,14 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
         spring.json.value.default.type: java.util.LinkedHashMap
+
+  ai:
+    google:
+      genai:
+        api-key: ${API_KEY}
+        chat:
+          options:
+            model: gemini-2.5-flash
 
 eureka:
   instance:

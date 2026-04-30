@@ -11,14 +11,17 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
 export default function NeuralMap({
   refreshKey,
   onNodeClick,
+  searchQuery,
 }: {
   refreshKey: number;
   onNodeClick?: (node: any) => void;
+  searchQuery?: string;
 }) {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const fgRef = useRef<any>();
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
   useEffect(() => {
@@ -78,6 +81,22 @@ export default function NeuralMap({
     fetchAndTransformData();
   }, [refreshKey]);
 
+  useEffect(() => {
+    if (!searchQuery || !fgRef.current || graphData.nodes.length === 0) return;
+
+    const targetNode = graphData.nodes.find(
+      (n: any) =>
+        n.name && n.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+
+    if (targetNode) {
+      fgRef.current.centerAt(targetNode.x, targetNode.y, 1000);
+      fgRef.current.zoom(3, 1000);
+
+      if (onNodeClick) onNodeClick(targetNode);
+    }
+  }, [searchQuery, graphData, onNodeClick]);
+
   if (loading)
     return (
       <div className="text-zinc-400 animate-pulse flex justify-center items-center h-64">
@@ -98,6 +117,7 @@ export default function NeuralMap({
       className="w-full h-[600px] border border-zinc-800 rounded-xl overflow-hidden bg-black shadow-2xl shadow-blue-900/20 cursor-crosshair"
     >
       <ForceGraph2D
+        ref={fgRef}
         width={dimensions.width}
         height={dimensions.height}
         graphData={graphData}

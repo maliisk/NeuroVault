@@ -3,11 +3,12 @@
 import { useState } from "react";
 import NeuralMap from "../components/NeuralMap";
 import NoteInput from "../components/NoteInput";
-import { BrainCircuit, Hash, X } from "lucide-react";
+import { BrainCircuit, Hash, X, Search } from "lucide-react";
 
 export default function Home() {
   const [refreshMapKey, setRefreshMapKey] = useState(0);
   const [selectedNode, setSelectedNode] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleNoteAdded = () => {
     setRefreshMapKey((prev) => prev + 1);
@@ -25,9 +26,22 @@ export default function Home() {
       <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6">
         <div className="flex-1 flex flex-col gap-4 transition-all duration-300">
           <NoteInput onNoteAdded={handleNoteAdded} />
+
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Sinir ağında düğüm ara... (Örn: React)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all shadow-inner"
+            />
+          </div>
+
           <NeuralMap
             refreshKey={refreshMapKey}
             onNodeClick={(node) => setSelectedNode(node)}
+            searchQuery={searchQuery}
           />
         </div>
 
@@ -82,7 +96,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* YENİ EKLENEN BÖLÜM: Orijinal Hafıza Kaydı */}
               {selectedNode.originalContent && (
                 <div className="mt-6 pt-4 border-t border-zinc-800">
                   <label className="text-xs text-zinc-500 uppercase tracking-wider font-semibold flex items-center gap-2">

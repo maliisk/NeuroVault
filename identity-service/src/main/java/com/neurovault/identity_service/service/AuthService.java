@@ -25,9 +25,9 @@ public class AuthService {
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
         userRepository.save(user);
-        return "Kullanıcı başarıyla kaydedildi.";
+
+        return jwtService.generateToken(user.getEmail());
     }
 
     public String login(String email, String rawPassword) {

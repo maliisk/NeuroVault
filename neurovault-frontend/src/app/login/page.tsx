@@ -31,8 +31,23 @@ export default function LoginPage() {
       });
 
       if (response.ok) {
-        const rawToken = await response.text();
-        const cleanToken = rawToken.replace(/['"\s]+/g, "");
+        const contentType = response.headers.get("content-type");
+        let cleanToken = "";
+
+        if (contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          cleanToken = data.token || data.accessToken || data.jwt;
+        } else {
+          const rawToken = await response.text();
+          cleanToken = rawToken.replace(/['"\s]+/g, "");
+        }
+
+        if (!cleanToken) {
+          throw new Error(
+            "Token backend'den alınamadı, JSON formatını kontrol et!",
+          );
+        }
+
         localStorage.setItem("neuro_token", cleanToken);
 
         router.push("/");

@@ -3,7 +3,16 @@
 import { useState } from "react";
 import NeuralMap from "../components/NeuralMap";
 import NoteInput from "../components/NoteInput";
-import { BrainCircuit, Hash, X, Search } from "lucide-react";
+// Network ikonu buraya eklendi
+import {
+  BrainCircuit,
+  Hash,
+  X,
+  Search,
+  Zap,
+  FileText,
+  Network,
+} from "lucide-react";
 
 export default function Home() {
   const [refreshMapKey, setRefreshMapKey] = useState(0);
@@ -46,66 +55,98 @@ export default function Home() {
         </div>
 
         {selectedNode && (
-          <div className="w-full lg:w-96 bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-2xl animate-in slide-in-from-right-8 relative">
-            <button
-              onClick={() => setSelectedNode(null)}
-              className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div
+            id="vl-detail-panel"
+            className="vl-glass-panel w-full lg:w-96 bg-zinc-950/80 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] animate-in slide-in-from-right-8 relative flex flex-col overflow-hidden"
+          >
+            {/* Panel Başlığı */}
+            <div className="p-5 border-b border-white/5 flex justify-between items-center bg-gradient-to-r from-transparent to-white/[0.02]">
+              <div className="flex items-center gap-2">
+                <BrainCircuit className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-semibold text-white tracking-wide">
+                  Sinaps Detayı
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedNode(null)}
+                className="text-zinc-500 hover:text-white transition-colors p-1 rounded-md hover:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <h2 className="text-xl font-bold border-b border-zinc-800 pb-4 mb-4 flex items-center gap-2">
-              {selectedNode.color === "#10b981" ? (
-                <BrainCircuit className="text-emerald-500" />
-              ) : (
-                <Hash className="text-amber-500" />
-              )}
-              Düğüm Detayı
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">
-                  İçerik / Bağlantı Adı
+            {/* Panel İçeriği */}
+            <div className="p-5 flex-1 overflow-y-auto space-y-6">
+              {/* Düğüm Adı / Özet */}
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
+                  <Zap className="w-3 h-3 text-amber-500" /> Nöral Çıktı
                 </label>
-                <p className="text-zinc-200 mt-1 bg-zinc-950 p-3 rounded-lg border border-zinc-800/50 leading-relaxed">
+                <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-emerald-300 font-medium leading-relaxed">
                   {selectedNode.name}
-                </p>
-              </div>
-
-              <div>
-                <label className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">
-                  Düğüm Türü
-                </label>
-                <div className="mt-1">
-                  {selectedNode.color === "#10b981" && (
-                    <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-sm border border-emerald-500/20">
-                      Yapay Zeka Özeti
-                    </span>
-                  )}
-                  {selectedNode.color === "#f59e0b" && (
-                    <span className="bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full text-sm border border-amber-500/20">
-                      Anahtar Kelime Kesişimi
-                    </span>
-                  )}
-                  {selectedNode.color === "#3b82f6" && (
-                    <span className="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full text-sm border border-blue-500/20">
-                      Sistem Merkezi (Kök)
-                    </span>
-                  )}
                 </div>
               </div>
 
+              {/* Orijinal Not (Sadece Ana Düğümlerde Görünür) */}
               {selectedNode.originalContent && (
-                <div className="mt-6 pt-4 border-t border-zinc-800">
-                  <label className="text-xs text-zinc-500 uppercase tracking-wider font-semibold flex items-center gap-2">
-                    Orijinal Hafıza Kaydı
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
+                    <FileText className="w-3 h-3 text-blue-500" /> Orijinal
+                    Kayıt
                   </label>
-                  <p className="text-zinc-300 mt-2 bg-black/50 p-4 rounded-lg border border-zinc-800/80 text-sm leading-relaxed italic shadow-inner">
+                  <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-900/30 text-zinc-300 text-sm leading-relaxed italic shadow-inner">
                     "{selectedNode.originalContent}"
-                  </p>
+                  </div>
                 </div>
               )}
+
+              {/* Düğüm Türü Bilgisi */}
+              <div className="mt-8 pt-6 border-t border-white/5 flex gap-3 items-center">
+                <div
+                  className="w-3 h-3 rounded-full shadow-[0_0_10px_currentColor]"
+                  style={{ color: selectedNode.color }}
+                ></div>
+                <span className="text-xs text-zinc-400 font-medium tracking-wide uppercase">
+                  {selectedNode.id === "merkez-kortex"
+                    ? "Merkez Bağlantı"
+                    : selectedNode.originalContent
+                      ? "Ana Düşünce Düğümü"
+                      : "Alt Etiket Düğümü"}
+                </span>
+              </div>
+
+              {/* YENİ: Bağlantılı Sinapslar Listesi */}
+              {selectedNode.connections &&
+                selectedNode.connections.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-white/5 space-y-3">
+                    <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
+                      <Network className="w-3 h-3 text-purple-400" /> Bağlantılı
+                      Sinapslar
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedNode.connections.map(
+                        (conn: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-zinc-300 hover:bg-white/10 transition-colors cursor-default"
+                            title={conn.name}
+                          >
+                            <div
+                              className="w-2 h-2 rounded-full shadow-[0_0_5px_currentColor]"
+                              style={{
+                                color: conn.color,
+                                backgroundColor: conn.color,
+                              }}
+                            ></div>
+                            <span className="truncate max-w-[180px] font-medium">
+                              {conn.name}
+                            </span>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                )}
             </div>
           </div>
         )}

@@ -92,7 +92,32 @@ export default function NeuralMap({
     if (targetNode) {
       fgRef.current.centerAt(targetNode.x, targetNode.y, 1000);
       fgRef.current.zoom(3, 1000);
-      if (onNodeClick) onNodeClick(targetNode);
+
+      // Arama yapıldığında da komşuları bulup paneli tetiklemek için aynı mantığı burada da uyguluyoruz
+      const connectedNodes = graphData.links
+        .filter((link: any) => {
+          const sourceId =
+            typeof link.source === "object" ? link.source.id : link.source;
+          const targetId =
+            typeof link.target === "object" ? link.target.id : link.target;
+          return sourceId === targetNode.id || targetId === targetNode.id;
+        })
+        .map((link: any) => {
+          const sourceId =
+            typeof link.source === "object" ? link.source.id : link.source;
+          const targetId =
+            typeof link.target === "object" ? link.target.id : link.target;
+          const connectedId = sourceId === targetNode.id ? targetId : sourceId;
+          return graphData.nodes.find((n: any) => n.id === connectedId);
+        })
+        .filter(Boolean);
+
+      const nodeWithConnections = {
+        ...targetNode,
+        connections: connectedNodes,
+      };
+
+      if (onNodeClick) onNodeClick(nodeWithConnections);
     }
   }, [searchQuery, graphData, onNodeClick]);
 
@@ -124,7 +149,7 @@ export default function NeuralMap({
   return (
     <div
       ref={containerRef}
-      className="w-full h-[600px] border border-zinc-800 rounded-xl overflow-hidden bg-black shadow-2xl shadow-blue-900/20 cursor-crosshair"
+      className="w-full h-[600px] bg-black rounded-xl overflow-hidden shadow-2xl shadow-blue-900/20 cursor-crosshair"
     >
       <ForceGraph2D
         ref={fgRef}
@@ -136,7 +161,35 @@ export default function NeuralMap({
         nodeRelSize={6}
         linkColor={() => "rgba(255,255,255,0.15)"}
         onNodeClick={(node) => {
-          if (onNodeClick) onNodeClick(node);
+          // Tıklanan düğümün bağlarını (komşularını) bul
+          const connectedNodes = graphData.links
+            .filter((link: any) => {
+              // D3 force graph, link source/target'larını string'den objeye dönüştürür
+              const sourceId =
+                typeof link.source === "object" ? link.source.id : link.source;
+              const targetId =
+                typeof link.target === "object" ? link.target.id : link.target;
+              return sourceId === node.id || targetId === node.id;
+            })
+            .map((link: any) => {
+              const sourceId =
+                typeof link.source === "object" ? link.source.id : link.source;
+              const targetId =
+                typeof link.target === "object" ? link.target.id : link.target;
+              // Karşı tarafın ID'sini bul
+              const connectedId = sourceId === node.id ? targetId : sourceId;
+              // Ana veri setinden karşı düğümün tüm özelliklerini çek
+              return graphData.nodes.find((n: any) => n.id === connectedId);
+            })
+            .filter(Boolean);
+
+          // Bulduğumuz komşuları "connections" adıyla düğüme ekleyip ana sayfaya yolluyoruz
+          const nodeWithConnections = {
+            ...node,
+            connections: connectedNodes,
+          };
+
+          if (onNodeClick) onNodeClick(nodeWithConnections);
         }}
         nodeCanvasObjectMode={(node: any) => {
           if (

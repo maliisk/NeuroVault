@@ -1,4 +1,4 @@
-package com.neurovault.cognitive_engine.security;
+package com.neurovault.query_service.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

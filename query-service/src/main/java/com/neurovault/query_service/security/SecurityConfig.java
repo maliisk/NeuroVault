@@ -1,4 +1,4 @@
-package com.neurovault.cognitive_engine.security;
+package com.neurovault.query_service.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +21,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                //.cors(org.springframework.security.config.Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().authenticated()
                 )
@@ -30,4 +31,6 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+
 }

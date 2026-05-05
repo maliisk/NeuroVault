@@ -4,6 +4,7 @@ import com.neurovault.query_service.entity.ProcessedData;
 import com.neurovault.query_service.repository.ProcessedDataRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,9 +16,13 @@ public class QueryController {
 
     private final ProcessedDataRepository repository;
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ProcessedData>> getUserData(@PathVariable String userId) {
-        List<ProcessedData> data = repository.findByUserId(userId);
+
+    @GetMapping("/my-brain")
+    public ResponseEntity<List<ProcessedData>> getMyBrain() {
+
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        List<ProcessedData> data = repository.findByUserId(userEmail);
 
         return ResponseEntity.ok(data);
     }

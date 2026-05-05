@@ -19,7 +19,6 @@ export default function NoteInput({
     setLoading(true);
     try {
       await api.post("/api/v1/data/ingest", {
-        userId: "user-999",
         content: content,
         source: "WEB_APP",
       });
@@ -29,7 +28,7 @@ export default function NoteInput({
       setTimeout(() => {
         onNoteAdded();
         setLoading(false);
-      }, 5000);
+      }, 10000);
     } catch (error) {
       console.error("Not fırlatılırken hata oluştu:", error);
       setLoading(false);
@@ -43,14 +42,14 @@ export default function NoteInput({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Aklındakileri buraya dök... (Örn: Bugün Kafka'nın asenkron yapısını öğrendim)"
-          className="w-full bg-zinc-950 text-zinc-200 border border-zinc-800 rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-y"
+          className="w-full bg-zinc-950 text-zinc-200 border border-zinc-800 rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-y"
           disabled={loading}
         />
         <div className="flex justify-end">
           <button
             type="submit"
             disabled={loading || !content.trim()}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

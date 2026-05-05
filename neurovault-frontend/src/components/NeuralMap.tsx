@@ -34,14 +34,14 @@ export default function NeuralMap({
 
     const fetchAndTransformData = async () => {
       try {
-        const response = await api.get("/api/v1/query/user/user-999");
+        const response = await api.get("/api/v1/query/my-brain");
         const data = response.data;
 
         const nodes: any[] = [];
         const links: any[] = [];
 
         nodes.push({
-          id: "user-999",
+          id: "merkez-kortex",
           name: "Benim Beynim",
           val: 10,
           color: "#3b82f6",
@@ -55,7 +55,7 @@ export default function NeuralMap({
             color: "#10b981",
             originalContent: item.originalContent,
           });
-          links.push({ source: "user-999", target: item.id });
+          links.push({ source: "merkez-kortex", target: item.id });
 
           item.keywords.forEach((keyword: string) => {
             if (!nodes.find((n) => n.id === keyword)) {
@@ -117,7 +117,7 @@ export default function NeuralMap({
   if (graphData.nodes.length <= 1)
     return (
       <div className="text-zinc-500 text-center mt-10">
-        Henüz hiç veri yok. Postman'den veri eklemeye başla!
+        Henüz hiç veri yok. Aklındakileri dökerek sinir ağını örmeye başla!
       </div>
     );
 

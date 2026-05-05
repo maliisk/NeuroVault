@@ -8,3 +8,19 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+api.interceptors.request.use(
+  (config) => {
+    if (typeof window !== "undefined") {
+      let token = localStorage.getItem("neuro_token");
+      if (token) {
+        token = token.replace(/['"\s]+/g, "");
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);

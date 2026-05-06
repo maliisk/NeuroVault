@@ -41,7 +41,7 @@ export default function NoteInput({
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Aklındakileri buraya dök... (Örn: Bugün Kafka'nın asenkron yapısını öğrendim)"
+          placeholder="Aklındakileri buraya dök... "
           className="w-full bg-zinc-950 text-zinc-200 border border-zinc-800 rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-y"
           disabled={loading}
         />

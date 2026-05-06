@@ -24,4 +24,7 @@ public class ProcessedData {
     private List<String> keywords;
 
     private LocalDateTime processedAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String originalContent;
 }

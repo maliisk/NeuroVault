@@ -3,16 +3,7 @@
 import { useState } from "react";
 import NeuralMap from "../components/NeuralMap";
 import NoteInput from "../components/NoteInput";
-// Network ikonu buraya eklendi
-import {
-  BrainCircuit,
-  Hash,
-  X,
-  Search,
-  Zap,
-  FileText,
-  Network,
-} from "lucide-react";
+import { BrainCircuit, X, Search, Zap, Database, Network } from "lucide-react";
 
 export default function Home() {
   const [refreshMapKey, setRefreshMapKey] = useState(0);
@@ -21,6 +12,29 @@ export default function Home() {
 
   const handleNoteAdded = () => {
     setRefreshMapKey((prev) => prev + 1);
+  };
+
+  // Metin içindeki linkleri (URL'leri) algılayıp tıklanabilir <a> etiketine çeviren yardımcı fonksiyon
+  const renderWithLinks = (text: string) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 underline underline-offset-4 transition-colors break-all"
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
   };
 
   return (
@@ -77,28 +91,36 @@ export default function Home() {
 
             {/* Panel İçeriği */}
             <div className="p-5 flex-1 overflow-y-auto space-y-6">
-              {/* Düğüm Adı / Özet */}
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
-                  <Zap className="w-3 h-3 text-amber-500" /> Nöral Çıktı
-                </label>
-                <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-emerald-300 font-medium leading-relaxed">
-                  {selectedNode.name}
-                </div>
-              </div>
-
-              {/* Orijinal Not (Sadece Ana Düğümlerde Görünür) */}
-              {selectedNode.originalContent && (
+              {/* YENİ VE ANA ODAK: HAM VERİ (ORİJİNAL KAYIT) */}
+              {/* Backend'den hangi isimle geliyorsa (originalContent, rawText, content) onu yakalıyoruz */}
+              {(selectedNode.originalContent ||
+                selectedNode.rawText ||
+                selectedNode.content) && (
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
-                    <FileText className="w-3 h-3 text-blue-500" /> Orijinal
-                    Kayıt
+                    <Database className="w-3 h-3 text-blue-400" /> Ham Veri
+                    (Orijinal Kayıt)
                   </label>
-                  <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-900/30 text-zinc-300 text-sm leading-relaxed italic shadow-inner">
-                    "{selectedNode.originalContent}"
+                  <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-900/40 text-zinc-200 text-sm leading-relaxed shadow-inner">
+                    {renderWithLinks(
+                      selectedNode.originalContent ||
+                        selectedNode.rawText ||
+                        selectedNode.content,
+                    )}
                   </div>
                 </div>
               )}
+
+              {/* NÖRAL ÇIKTI / YAPAY ZEKA ÖZETİ */}
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2">
+                  <Zap className="w-3 h-3 text-amber-500" /> Nöral Çıktı (AI
+                  Özeti)
+                </label>
+                <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-emerald-300 font-medium leading-relaxed italic">
+                  {selectedNode.name}
+                </div>
+              </div>
 
               {/* Düğüm Türü Bilgisi */}
               <div className="mt-8 pt-6 border-t border-white/5 flex gap-3 items-center">
@@ -109,13 +131,15 @@ export default function Home() {
                 <span className="text-xs text-zinc-400 font-medium tracking-wide uppercase">
                   {selectedNode.id === "merkez-kortex"
                     ? "Merkez Bağlantı"
-                    : selectedNode.originalContent
+                    : selectedNode.originalContent ||
+                        selectedNode.rawText ||
+                        selectedNode.content
                       ? "Ana Düşünce Düğümü"
                       : "Alt Etiket Düğümü"}
                 </span>
               </div>
 
-              {/* YENİ: Bağlantılı Sinapslar Listesi */}
+              {/* Bağlantılı Sinapslar Listesi */}
               {selectedNode.connections &&
                 selectedNode.connections.length > 0 && (
                   <div className="mt-6 pt-6 border-t border-white/5 space-y-3">

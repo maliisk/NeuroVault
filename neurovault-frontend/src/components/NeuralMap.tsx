@@ -13,10 +13,12 @@ export default function NeuralMap({
   refreshKey,
   onNodeClick,
   searchQuery,
+  deletingNodeId,
 }: {
   refreshKey: number;
   onNodeClick?: (node: any) => void;
   searchQuery?: string;
+  deletingNodeId?: string | null;
 }) {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
@@ -55,15 +57,11 @@ export default function NeuralMap({
     img.src = "/brain.svg";
 
     img.onload = () => {
-      console.log("Siber Beyin SVG başarıyla yüklendi!");
       setBrainImage(img);
     };
 
     img.onerror = (err) => {
-      console.error(
-        "SVG Yüklenemedi! Lütfen dosya adının public/brain.svg olduğundan emin ol.",
-        err,
-      );
+      console.error("SVG Yüklenemedi!", err);
     };
   }, []);
 
@@ -90,11 +88,12 @@ export default function NeuralMap({
             val: 6,
             color: "#10b981",
             originalContent: item.originalContent,
+            isMainNode: true,
           });
           links.push({ source: "merkez-kortex", target: item.id });
 
           item.keywords.forEach((keyword: string) => {
-            if (!nodes.find((n) => n.id === keyword)) {
+            if (!nodes.find((n: any) => n.id === keyword)) {
               nodes.push({
                 id: keyword,
                 name: keyword,
@@ -198,7 +197,6 @@ export default function NeuralMap({
       ref={containerRef}
       className="relative w-full h-[750px] bg-[#030712] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.15)] cursor-crosshair border border-white/5 transition-all duration-500 hover:shadow-[0_0_60px_rgba(16,185,129,0.2)]"
     >
-      {/* 1. KATMAN: NOKTA IZGARASI (Z-0) */}
       <div
         className="absolute inset-0 z-0 pointer-events-none opacity-[0.15]"
         style={{
@@ -206,17 +204,11 @@ export default function NeuralMap({
           backgroundSize: "30px 30px",
         }}
       ></div>
-
-      {/* 2. KATMAN: NEBULA PARLAMASI (Z-0) */}
       <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent"></div>
 
-      {/* 3. KATMAN: İNSAN KAFASI GÖRSELİ (Z-10) */}
       <div
         className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center origin-center"
-        style={{
-          opacity: headOpacity,
-          transform: `scale(${headScale})`,
-        }}
+        style={{ opacity: headOpacity, transform: `scale(${headScale})` }}
       >
         <img
           src="/neuro.png"
@@ -225,13 +217,9 @@ export default function NeuralMap({
         />
       </div>
 
-      {/* 4. KATMAN: CANVAS / SİNİR AĞI (Z-20 - EN ÜSTTE) */}
       <div
         className="absolute inset-0 z-20"
-        style={{
-          opacity: graphOpacity,
-          transition: "opacity 0.1s ease-out",
-        }}
+        style={{ opacity: graphOpacity, transition: "opacity 0.1s ease-out" }}
       >
         <ForceGraph2D
           ref={fgRef}
@@ -242,6 +230,18 @@ export default function NeuralMap({
           nodeRelSize={6}
           onNodeHover={(node) => setHoverNode(node)}
           linkColor={(link: any) => {
+            // YENİ: KISA DEVRE EFEKTİ
+            if (
+              deletingNodeId &&
+              (link.source.id === deletingNodeId ||
+                link.target.id === deletingNodeId)
+            ) {
+              // Silinen düğüme bağlı kablolar rastgele kırmızı beyaz pırpır eder
+              return Math.random() > 0.4
+                ? "rgba(239, 68, 68, 0.9)"
+                : "rgba(255, 255, 255, 0.8)";
+            }
+
             if (hoverNode) {
               const isConnected =
                 link.source.id === hoverNode.id ||
@@ -253,6 +253,12 @@ export default function NeuralMap({
             return "rgba(59, 130, 246, 0.3)";
           }}
           linkWidth={(link: any) => {
+            if (
+              deletingNodeId &&
+              (link.source.id === deletingNodeId ||
+                link.target.id === deletingNodeId)
+            )
+              return 3;
             if (hoverNode) {
               const isConnected =
                 link.source.id === hoverNode.id ||
@@ -283,9 +289,8 @@ export default function NeuralMap({
               : 0.005
           }
           onZoom={(transform) => {
-            if (initialZoomRef.current === null) {
+            if (initialZoomRef.current === null)
               initialZoomRef.current = transform.k;
-            }
             setZoomLevel(transform.k);
           }}
           onNodeClick={(node) => {
@@ -319,11 +324,98 @@ export default function NeuralMap({
               ...node,
               connections: connectedNodes,
             };
-
             if (onNodeClick) onNodeClick(nodeWithConnections);
           }}
           nodeCanvasObject={(node: any, ctx, globalScale) => {
             const time = Date.now() / 300;
+
+            // --- YENİ EFSANEVİ PARÇALANMA ANİMASYONU ---
+            if (deletingNodeId === node.id) {
+              // Animasyon başlangıç anını ve partikülleri oluştur
+              if (!node.explosionStart) {
+                node.explosionStart = Date.now();
+                // 30 adet rastgele uçuşacak dijital parça (kristal) üretiyoruz
+                node.particles = Array.from({ length: 30 }).map(() => ({
+                  angle: Math.random() * Math.PI * 2,
+                  speed: 30 + Math.random() * 120, // Saniyedeki pixel hızı
+                  spin: (Math.random() - 0.5) * 15, // Kendi etrafında dönme
+                  size: 1 + Math.random() * (node.val * 0.8), // Parça büyüklüğü
+                }));
+              }
+
+              const elapsed = Date.now() - node.explosionStart;
+              const animProgress = Math.min(1, elapsed / 1000); // 1 saniyelik toplam süre (0'dan 1'e)
+
+              ctx.save();
+
+              if (animProgress < 0.2) {
+                // AŞAMA 1: İÇE ÇÖKÜŞ VE TİTREME (İlk 200 milisaniye)
+                const impProgress = animProgress / 0.2;
+                const offsetX = (Math.random() - 0.5) * impProgress * 15;
+                const offsetY = (Math.random() - 0.5) * impProgress * 15;
+
+                ctx.beginPath();
+                ctx.arc(
+                  node.x + offsetX,
+                  node.y + offsetY,
+                  node.val * (1 - impProgress * 0.5),
+                  0,
+                  2 * Math.PI,
+                );
+                ctx.fillStyle = Math.random() > 0.5 ? "#ffffff" : "#ef4444"; // Kırmızı beyaz glitch
+                ctx.shadowBlur = 40;
+                ctx.shadowColor = "#ef4444";
+                ctx.fill();
+              } else {
+                // AŞAMA 2: PATLAMA VE PARTİKÜLLER (Kalan 800 milisaniye)
+                const expProgress = (animProgress - 0.2) / 0.8;
+                // Cubic ease-out efekti ile parçalar yavaşlayarak durur
+                const easeOut = 1 - Math.pow(1 - expProgress, 3);
+
+                // Parçacıkları Çiz
+                node.particles.forEach((p: any) => {
+                  const dist = p.speed * easeOut;
+                  const currentRot = p.spin * easeOut;
+                  const px = node.x + Math.cos(p.angle) * dist;
+                  const py = node.y + Math.sin(p.angle) * dist;
+
+                  ctx.save();
+                  ctx.translate(px, py);
+                  ctx.rotate(currentRot);
+
+                  // Keskin üçgen parçalar çiziyoruz
+                  ctx.beginPath();
+                  ctx.moveTo(0, -p.size);
+                  ctx.lineTo(p.size * 0.866, p.size * 0.5);
+                  ctx.lineTo(-p.size * 0.866, p.size * 0.5);
+                  ctx.closePath();
+
+                  ctx.fillStyle = `rgba(239, 68, 68, ${1 - expProgress})`; // Uçtukça soluklaşır
+                  ctx.shadowBlur = 15;
+                  ctx.shadowColor = "#ef4444";
+                  ctx.fill();
+                  ctx.restore();
+                });
+
+                // Genişleyen Şok Dalgası Halkası
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, easeOut * 120, 0, 2 * Math.PI);
+                ctx.lineWidth = 4 * (1 - expProgress);
+                ctx.strokeStyle = `rgba(239, 68, 68, ${1 - expProgress})`;
+                ctx.stroke();
+              }
+
+              ctx.restore();
+              return; // Silinen düğümü normal bir şekilde çizmemek için burada işlemi bitir
+            } else {
+              // Eğer düğüm silinmekten vazgeçildiyse (hata vs) state'leri temizle
+              if (node.explosionStart) {
+                delete node.explosionStart;
+                delete node.particles;
+              }
+            }
+            // --- ANİMASYON BİTİŞİ ---
+
             const isSearched =
               searchQuery &&
               node.name?.toLowerCase().includes(searchQuery.toLowerCase());

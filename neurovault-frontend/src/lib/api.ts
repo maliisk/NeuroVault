@@ -1,23 +1,22 @@
 import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:8080";
-
+// Gateway adresini buraya yazıyoruz
 export const api = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: "http://localhost:8080", // Not: Kendi Gateway portun neyse o kalsın, genelde 8080 olur
 });
 
+// YENİ: Her istek (request) atılmadan salise önce araya girip Token'ı ekliyoruz
 api.interceptors.request.use(
   (config) => {
-    if (typeof window !== "undefined") {
-      let token = localStorage.getItem("neuro_token");
-      if (token) {
-        token = token.replace(/['"\s]+/g, "");
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    // Token'ı localStorage'dan çek
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("nv_token") : null;
+
+    // Eğer token varsa, isteğin Header (Başlık) kısmına "Bearer {token}" olarak ekle
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => {

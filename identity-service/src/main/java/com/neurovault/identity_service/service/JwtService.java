@@ -1,5 +1,6 @@
 package com.neurovault.identity_service.service;
 
+import com.neurovault.identity_service.entity.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -21,9 +22,26 @@ public class JwtService {
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
 
-    public String generateToken(String email) {
+    // YENİ: String email yerine User objesi alıyoruz
+    public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, email);
+        // JWT'nin payload kısmına kullanıcı bilgilerini ekliyoruz
+        claims.put("id", user.getId());
+        claims.put("firstName", user.getFirstName());
+        claims.put("lastName", user.getLastName());
+        claims.put("role", user.getRole());
+
+        return createToken(claims, user.getEmail());
+    }
+
+    // Token'ı çözüp içindeki email adresini (Subject) çıkaran metod
+    public String extractEmail(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
     private String createToken(Map<String, Object> claims, String email) {

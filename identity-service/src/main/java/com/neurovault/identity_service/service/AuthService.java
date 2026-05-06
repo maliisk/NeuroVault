@@ -1,5 +1,6 @@
 package com.neurovault.identity_service.service;
 
+import com.neurovault.identity_service.dto.UserUpdateRequest;
 import com.neurovault.identity_service.entity.User;
 import com.neurovault.identity_service.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -7,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
-
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -25,9 +25,11 @@ public class AuthService {
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+        // Kaydedip ID'nin oluşmasını sağlıyoruz
+        User savedUser = userRepository.save(user);
 
-        return jwtService.generateToken(user.getEmail());
+        // YENİ: Tüm objeyi gönderiyoruz
+        return jwtService.generateToken(savedUser);
     }
 
     public String login(String email, String rawPassword) {
@@ -38,6 +40,26 @@ public class AuthService {
             throw new RuntimeException("Hatalı şifre!");
         }
 
-        return jwtService.generateToken(email);
+        // YENİ: Tüm objeyi gönderiyoruz
+        return jwtService.generateToken(user);
+    }
+
+    public String updateProfile(String email, UserUpdateRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı."));
+
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+
+        if (request.getNewPassword() != null && !request.getNewPassword().isEmpty()) {
+            if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+                throw new RuntimeException("Mevcut şifre hatalı!");
+            }
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        }
+
+        User updatedUser = userRepository.save(user);
+        // Güncellenmiş bilgilerle yepyeni bir token üretip dönüyoruz
+        return jwtService.generateToken(updatedUser);
     }
 }

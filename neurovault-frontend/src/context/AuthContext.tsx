@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-// Token içindeki base64 veriyi okumak için yardımcı fonksiyon
 const parseJwt = (token: string) => {
   try {
     return JSON.parse(atob(token.split(".")[1]));
@@ -42,10 +41,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: decoded.id,
           firstName: decoded.firstName,
           lastName: decoded.lastName,
-          email: decoded.sub, // JWT sub alanı e-postayı tutar
+          email: decoded.sub,
         });
       } else {
-        logout(); // Token süresi dolmuşsa temizle
+        logout();
       }
     }
   }, []);

@@ -35,16 +35,14 @@ export default function ProfilePage() {
         },
       );
 
-      // YENİ MANTIK: Logout olmak yerine gelen yeni token ile bilgileri tazele!
       if (response.data.token) {
-        const { login } = useAuth(); // Eğer dışarıda tanımlı değilse login'i buradan al
+        const { login } = useAuth();
         login(response.data.token);
         setMessage({
           type: "success",
           text: "Profiliniz başarıyla güncellendi ve nöral ağlar senkronize edildi!",
         });
 
-        // Şifre alanlarını temizleyelim
         setFormData((prev) => ({
           ...prev,
           currentPassword: "",

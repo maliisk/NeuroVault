@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { LogIn, LogOut, UserCircle, Brain, Loader2 } from "lucide-react";
 import Link from "next/link";
-import axios from "axios"; // Eklemediysen: npm install axios
+import axios from "axios";
 
 export default function Header() {
   const { user, isAuthenticated, logout, login } = useAuth();
@@ -13,7 +13,6 @@ export default function Header() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Input State'leri
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -26,7 +25,6 @@ export default function Header() {
     setError("");
     try {
       const endpoint = isLoginView ? "/auth/login" : "/auth/register";
-      // NOT: Gateway kullanıyorsan portu ona göre ayarla, şimdilik direkt identity-service'e gidiyoruz
       const response = await axios.post(
         `http://localhost:8081${endpoint}`,
         isLoginView

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { api } from "../lib/api";
-import { BrainCircuit } from "lucide-react";
+import { BrainCircuit, MousePointer2 } from "lucide-react";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
   ssr: false,
@@ -22,6 +22,7 @@ export default function NeuralMap({
 }) {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
+  const [showHint, setShowHint] = useState(true);
 
   const [hoverNode, setHoverNode] = useState<any>(null);
 
@@ -230,13 +231,11 @@ export default function NeuralMap({
           nodeRelSize={6}
           onNodeHover={(node) => setHoverNode(node)}
           linkColor={(link: any) => {
-            // YENİ: KISA DEVRE EFEKTİ
             if (
               deletingNodeId &&
               (link.source.id === deletingNodeId ||
                 link.target.id === deletingNodeId)
             ) {
-              // Silinen düğüme bağlı kablolar rastgele kırmızı beyaz pırpır eder
               return Math.random() > 0.4
                 ? "rgba(239, 68, 68, 0.9)"
                 : "rgba(255, 255, 255, 0.8)";
@@ -292,6 +291,11 @@ export default function NeuralMap({
             if (initialZoomRef.current === null)
               initialZoomRef.current = transform.k;
             setZoomLevel(transform.k);
+            if (transform.k - initialZoomRef.current > 0.75) {
+              setShowHint(false);
+            } else {
+              setShowHint(true);
+            }
           }}
           onNodeClick={(node) => {
             const connectedNodes = graphData.links
@@ -329,27 +333,23 @@ export default function NeuralMap({
           nodeCanvasObject={(node: any, ctx, globalScale) => {
             const time = Date.now() / 300;
 
-            // --- YENİ EFSANEVİ PARÇALANMA ANİMASYONU ---
             if (deletingNodeId === node.id) {
-              // Animasyon başlangıç anını ve partikülleri oluştur
               if (!node.explosionStart) {
                 node.explosionStart = Date.now();
-                // 30 adet rastgele uçuşacak dijital parça (kristal) üretiyoruz
                 node.particles = Array.from({ length: 30 }).map(() => ({
                   angle: Math.random() * Math.PI * 2,
-                  speed: 30 + Math.random() * 120, // Saniyedeki pixel hızı
-                  spin: (Math.random() - 0.5) * 15, // Kendi etrafında dönme
-                  size: 1 + Math.random() * (node.val * 0.8), // Parça büyüklüğü
+                  speed: 30 + Math.random() * 120,
+                  spin: (Math.random() - 0.5) * 15,
+                  size: 1 + Math.random() * (node.val * 0.8),
                 }));
               }
 
               const elapsed = Date.now() - node.explosionStart;
-              const animProgress = Math.min(1, elapsed / 1000); // 1 saniyelik toplam süre (0'dan 1'e)
+              const animProgress = Math.min(1, elapsed / 1000);
 
               ctx.save();
 
               if (animProgress < 0.2) {
-                // AŞAMA 1: İÇE ÇÖKÜŞ VE TİTREME (İlk 200 milisaniye)
                 const impProgress = animProgress / 0.2;
                 const offsetX = (Math.random() - 0.5) * impProgress * 15;
                 const offsetY = (Math.random() - 0.5) * impProgress * 15;
@@ -362,17 +362,14 @@ export default function NeuralMap({
                   0,
                   2 * Math.PI,
                 );
-                ctx.fillStyle = Math.random() > 0.5 ? "#ffffff" : "#ef4444"; // Kırmızı beyaz glitch
+                ctx.fillStyle = Math.random() > 0.5 ? "#ffffff" : "#ef4444";
                 ctx.shadowBlur = 40;
                 ctx.shadowColor = "#ef4444";
                 ctx.fill();
               } else {
-                // AŞAMA 2: PATLAMA VE PARTİKÜLLER (Kalan 800 milisaniye)
                 const expProgress = (animProgress - 0.2) / 0.8;
-                // Cubic ease-out efekti ile parçalar yavaşlayarak durur
                 const easeOut = 1 - Math.pow(1 - expProgress, 3);
 
-                // Parçacıkları Çiz
                 node.particles.forEach((p: any) => {
                   const dist = p.speed * easeOut;
                   const currentRot = p.spin * easeOut;
@@ -383,21 +380,19 @@ export default function NeuralMap({
                   ctx.translate(px, py);
                   ctx.rotate(currentRot);
 
-                  // Keskin üçgen parçalar çiziyoruz
                   ctx.beginPath();
                   ctx.moveTo(0, -p.size);
                   ctx.lineTo(p.size * 0.866, p.size * 0.5);
                   ctx.lineTo(-p.size * 0.866, p.size * 0.5);
                   ctx.closePath();
 
-                  ctx.fillStyle = `rgba(239, 68, 68, ${1 - expProgress})`; // Uçtukça soluklaşır
+                  ctx.fillStyle = `rgba(239, 68, 68, ${1 - expProgress})`;
                   ctx.shadowBlur = 15;
                   ctx.shadowColor = "#ef4444";
                   ctx.fill();
                   ctx.restore();
                 });
 
-                // Genişleyen Şok Dalgası Halkası
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, easeOut * 120, 0, 2 * Math.PI);
                 ctx.lineWidth = 4 * (1 - expProgress);
@@ -406,15 +401,13 @@ export default function NeuralMap({
               }
 
               ctx.restore();
-              return; // Silinen düğümü normal bir şekilde çizmemek için burada işlemi bitir
+              return;
             } else {
-              // Eğer düğüm silinmekten vazgeçildiyse (hata vs) state'leri temizle
               if (node.explosionStart) {
                 delete node.explosionStart;
                 delete node.particles;
               }
             }
-            // --- ANİMASYON BİTİŞİ ---
 
             const isSearched =
               searchQuery &&
@@ -513,6 +506,16 @@ export default function NeuralMap({
             ctx.globalAlpha = 1;
           }}
         />
+      </div>
+      <div
+        className={`absolute top-8 left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-all duration-1000 flex items-center gap-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] ${
+          showHint ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
+        }`}
+      >
+        <MousePointer2 className="w-4 h-4 text-emerald-400 animate-bounce" />
+        <span className="text-xs sm:text-sm text-zinc-300 font-medium tracking-wide">
+          Haritayı keşfetmek için beyne doğru zoom yapın
+        </span>
       </div>
     </div>
   );

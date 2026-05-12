@@ -34,36 +34,28 @@ export default function NeuralMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<any>();
 
-  const [dimensions, setDimensions] = useState({ width: 1200, height: 750 });
+  const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      if (entries && entries.length > 0) {
-        const { width, height } = entries[0].contentRect;
-        if (width > 0 && height > 0) {
-          setDimensions({ width, height });
-        }
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight,
+        });
       }
-    });
+    };
 
-    resizeObserver.observe(container);
-    return () => resizeObserver.disconnect();
+    updateDimensions();
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
   useEffect(() => {
     const img = new Image();
     img.src = "/brain.svg";
-
-    img.onload = () => {
-      setBrainImage(img);
-    };
-
-    img.onerror = (err) => {
-      console.error("SVG Yüklenemedi!", err);
-    };
+    img.onload = () => setBrainImage(img);
+    img.onerror = (err) => console.error("SVG Yüklenemedi!", err);
   }, []);
 
   useEffect(() => {
@@ -71,7 +63,6 @@ export default function NeuralMap({
       try {
         const response = await api.get("/api/v1/query/my-brain");
         const data = response.data;
-
         const nodes: any[] = [];
         const links: any[] = [];
 
@@ -105,7 +96,6 @@ export default function NeuralMap({
             links.push({ source: item.id, target: keyword });
           });
         });
-
         setGraphData({ nodes, links });
       } catch (error) {
         console.error("Veri çekilirken hata:", error);
@@ -113,70 +103,51 @@ export default function NeuralMap({
         setLoading(false);
       }
     };
-
     fetchAndTransformData();
   }, [refreshKey]);
 
   useEffect(() => {
     if (!searchQuery || !fgRef.current || graphData.nodes.length === 0) return;
-
     const targetNode = graphData.nodes.find(
       (n: any) =>
         n.name && n.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-
     if (targetNode) {
       fgRef.current.centerAt(targetNode.x, targetNode.y, 1000);
       fgRef.current.zoom(3, 1000);
-
       const connectedNodes = graphData.links
         .filter((link: any) => {
-          const sourceId =
+          const sId =
             typeof link.source === "object" ? link.source.id : link.source;
-          const targetId =
+          const tId =
             typeof link.target === "object" ? link.target.id : link.target;
-          return sourceId === targetNode.id || targetId === targetNode.id;
+          return sId === targetNode.id || tId === targetNode.id;
         })
         .map((link: any) => {
-          const sourceId =
+          const sId =
             typeof link.source === "object" ? link.source.id : link.source;
-          const targetId =
+          const tId =
             typeof link.target === "object" ? link.target.id : link.target;
-          const connectedId = sourceId === targetNode.id ? targetId : sourceId;
+          const connectedId = sId === targetNode.id ? tId : sId;
           return graphData.nodes.find((n: any) => n.id === connectedId);
         })
         .filter(Boolean);
 
-      const nodeWithConnections = {
-        ...targetNode,
-        connections: connectedNodes,
-      };
-
-      if (onNodeClick) onNodeClick(nodeWithConnections);
+      if (onNodeClick)
+        onNodeClick({ ...targetNode, connections: connectedNodes });
     }
   }, [searchQuery, graphData, onNodeClick]);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (searchQuery && fgRef.current) {
-      interval = setInterval(() => {
-        const currentZoom = fgRef.current.zoom();
-        fgRef.current.zoom(currentZoom);
-      }, 1000 / 60);
-    }
-    return () => clearInterval(interval);
-  }, [searchQuery]);
-
   if (loading)
     return (
-      <div className="text-zinc-400 animate-pulse flex justify-center items-center h-[750px] tracking-widest uppercase text-sm font-semibold">
+      <div className="text-zinc-400 animate-pulse flex justify-center items-center h-[80vh] tracking-widest uppercase text-sm font-semibold">
         Nöral Ağlar Senkronize Ediliyor...
       </div>
     );
 
   if (graphData.nodes.length <= 1)
     return (
-      <div className="text-zinc-500 text-center mt-10 h-[750px] flex flex-col items-center justify-center gap-4">
+      <div className="text-zinc-500 text-center mt-10 h-[80vh] flex flex-col items-center justify-center gap-4">
         <BrainCircuit className="w-12 h-12 text-zinc-700 animate-pulse" />
         <p>
           Henüz hiç veri yok. Aklındakileri dökerek sinir ağını örmeye başla!
@@ -187,7 +158,6 @@ export default function NeuralMap({
   const base = initialZoomRef.current || 1;
   const delta = Math.max(0, zoomLevel - base);
   const progress = Math.min(1, delta / 1.5);
-
   const headOpacity = Math.max(0, 1 - progress / 0.5);
   const headScale = 1 + progress * 4;
   const graphOpacity =
@@ -196,7 +166,7 @@ export default function NeuralMap({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[750px] bg-[#030712] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.15)] cursor-crosshair border border-white/5 transition-all duration-500 hover:shadow-[0_0_60px_rgba(16,185,129,0.2)]"
+      className="relative w-full h-[80vh] min-h-[700px] bg-[#030712] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.15)] cursor-crosshair border border-white/5 transition-all duration-500"
     >
       <div
         className="absolute inset-0 z-0 pointer-events-none opacity-[0.15]"
@@ -205,7 +175,6 @@ export default function NeuralMap({
           backgroundSize: "30px 30px",
         }}
       ></div>
-      <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent"></div>
 
       <div
         className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center origin-center"
@@ -236,11 +205,8 @@ export default function NeuralMap({
               (link.source.id === deletingNodeId ||
                 link.target.id === deletingNodeId)
             ) {
-              return Math.random() > 0.4
-                ? "rgba(239, 68, 68, 0.9)"
-                : "rgba(255, 255, 255, 0.8)";
+              return Math.random() > 0.4 ? "#ef4444" : "#ffffff";
             }
-
             if (hoverNode) {
               const isConnected =
                 link.source.id === hoverNode.id ||
@@ -275,18 +241,6 @@ export default function NeuralMap({
             }
             return 3;
           }}
-          linkDirectionalParticleWidth={(link: any) =>
-            hoverNode &&
-            (link.source.id === hoverNode.id || link.target.id === hoverNode.id)
-              ? 4
-              : 2
-          }
-          linkDirectionalParticleSpeed={(link: any) =>
-            hoverNode &&
-            (link.source.id === hoverNode.id || link.target.id === hoverNode.id)
-              ? 0.015
-              : 0.005
-          }
           onZoom={(transform) => {
             if (initialZoomRef.current === null)
               initialZoomRef.current = transform.k;
@@ -300,39 +254,34 @@ export default function NeuralMap({
           onNodeClick={(node) => {
             const connectedNodes = graphData.links
               .filter((link: any) => {
-                const sourceId =
+                const sId =
                   typeof link.source === "object"
                     ? link.source.id
                     : link.source;
-                const targetId =
+                const tId =
                   typeof link.target === "object"
                     ? link.target.id
                     : link.target;
-                return sourceId === node.id || targetId === node.id;
+                return sId === node.id || tId === node.id;
               })
               .map((link: any) => {
-                const sourceId =
+                const sId =
                   typeof link.source === "object"
                     ? link.source.id
                     : link.source;
-                const targetId =
+                const tId =
                   typeof link.target === "object"
                     ? link.target.id
                     : link.target;
-                const connectedId = sourceId === node.id ? targetId : sourceId;
+                const connectedId = sId === node.id ? tId : sId;
                 return graphData.nodes.find((n: any) => n.id === connectedId);
               })
               .filter(Boolean);
-
-            const nodeWithConnections = {
-              ...node,
-              connections: connectedNodes,
-            };
-            if (onNodeClick) onNodeClick(nodeWithConnections);
+            if (onNodeClick)
+              onNodeClick({ ...node, connections: connectedNodes });
           }}
           nodeCanvasObject={(node: any, ctx, globalScale) => {
             const time = Date.now() / 300;
-
             if (deletingNodeId === node.id) {
               if (!node.explosionStart) {
                 node.explosionStart = Date.now();
@@ -343,82 +292,45 @@ export default function NeuralMap({
                   size: 1 + Math.random() * (node.val * 0.8),
                 }));
               }
-
               const elapsed = Date.now() - node.explosionStart;
               const animProgress = Math.min(1, elapsed / 1000);
-
               ctx.save();
-
               if (animProgress < 0.2) {
                 const impProgress = animProgress / 0.2;
-                const offsetX = (Math.random() - 0.5) * impProgress * 15;
-                const offsetY = (Math.random() - 0.5) * impProgress * 15;
-
                 ctx.beginPath();
                 ctx.arc(
-                  node.x + offsetX,
-                  node.y + offsetY,
+                  node.x,
+                  node.y,
                   node.val * (1 - impProgress * 0.5),
                   0,
                   2 * Math.PI,
                 );
-                ctx.fillStyle = Math.random() > 0.5 ? "#ffffff" : "#ef4444";
-                ctx.shadowBlur = 40;
-                ctx.shadowColor = "#ef4444";
+                ctx.fillStyle = "#ef4444";
                 ctx.fill();
               } else {
                 const expProgress = (animProgress - 0.2) / 0.8;
                 const easeOut = 1 - Math.pow(1 - expProgress, 3);
-
                 node.particles.forEach((p: any) => {
                   const dist = p.speed * easeOut;
-                  const currentRot = p.spin * easeOut;
                   const px = node.x + Math.cos(p.angle) * dist;
                   const py = node.y + Math.sin(p.angle) * dist;
-
-                  ctx.save();
-                  ctx.translate(px, py);
-                  ctx.rotate(currentRot);
-
                   ctx.beginPath();
-                  ctx.moveTo(0, -p.size);
-                  ctx.lineTo(p.size * 0.866, p.size * 0.5);
-                  ctx.lineTo(-p.size * 0.866, p.size * 0.5);
-                  ctx.closePath();
-
+                  ctx.arc(px, py, p.size * (1 - expProgress), 0, 2 * Math.PI);
                   ctx.fillStyle = `rgba(239, 68, 68, ${1 - expProgress})`;
-                  ctx.shadowBlur = 15;
-                  ctx.shadowColor = "#ef4444";
                   ctx.fill();
-                  ctx.restore();
                 });
-
-                ctx.beginPath();
-                ctx.arc(node.x, node.y, easeOut * 120, 0, 2 * Math.PI);
-                ctx.lineWidth = 4 * (1 - expProgress);
-                ctx.strokeStyle = `rgba(239, 68, 68, ${1 - expProgress})`;
-                ctx.stroke();
               }
-
               ctx.restore();
               return;
-            } else {
-              if (node.explosionStart) {
-                delete node.explosionStart;
-                delete node.particles;
-              }
             }
 
             const isSearched =
               searchQuery &&
               node.name?.toLowerCase().includes(searchQuery.toLowerCase());
-
-            let isHovered = false;
-            let isNeighbor = false;
-
-            if (hoverNode) {
-              isHovered = node.id === hoverNode.id;
-              isNeighbor = graphData.links.some((l: any) => {
+            let isHovered = hoverNode && node.id === hoverNode.id;
+            let isNeighbor =
+              hoverNode &&
+              graphData.links.some((l: any) => {
                 const sId =
                   typeof l.source === "object" ? l.source.id : l.source;
                 const tId =
@@ -428,85 +340,60 @@ export default function NeuralMap({
                   (tId === node.id && sId === hoverNode.id)
                 );
               });
-            }
 
-            const isDimmed = hoverNode && !isHovered && !isNeighbor;
-            ctx.globalAlpha = isDimmed ? 0.1 : 1;
+            ctx.globalAlpha = hoverNode && !isHovered && !isNeighbor ? 0.1 : 1;
 
             if (isSearched) {
-              const pulseRadius = node.val + 5 + Math.sin(time * 2) * 5;
               ctx.beginPath();
-              ctx.arc(node.x, node.y, pulseRadius, 0, 2 * Math.PI, false);
-              ctx.strokeStyle = `rgba(255, 255, 255, ${0.5 + Math.sin(time * 2) * 0.5})`;
-              ctx.lineWidth = 4 / globalScale;
+              ctx.arc(node.x, node.y, node.val + 8, 0, 2 * Math.PI);
+              ctx.strokeStyle = "#ffffff";
+              ctx.lineWidth = 2 / globalScale;
               ctx.stroke();
             }
 
             if (node.id === "merkez-kortex") {
-              const size = 50;
               if (brainImage) {
-                ctx.save();
-                ctx.shadowColor =
-                  hoverNode && isHovered ? "#10b981" : "#3b82f6";
-                ctx.shadowBlur =
-                  (hoverNode && isHovered ? 50 : 30) + Math.sin(time) * 15;
-                ctx.drawImage(
-                  brainImage,
-                  node.x - size / 2,
-                  node.y - size / 2,
-                  size,
-                  size,
-                );
-                ctx.restore();
+                ctx.drawImage(brainImage, node.x - 25, node.y - 25, 50, 50);
               } else {
                 ctx.beginPath();
-                ctx.arc(node.x, node.y, 15, 0, 2 * Math.PI, false);
-                ctx.fillStyle = node.color;
-                ctx.shadowColor = node.color;
-                ctx.shadowBlur = 20;
+                ctx.arc(node.x, node.y, 15, 0, 2 * Math.PI);
+                ctx.fillStyle = "#3b82f6";
                 ctx.fill();
               }
             } else {
-              const size = isHovered ? node.val * 1.5 : node.val;
               const color = isHovered ? "#ffffff" : node.color;
-              const spikes = 5;
-
-              ctx.save();
-              ctx.shadowColor = color;
-              ctx.shadowBlur =
-                (isHovered ? 30 : 15) + Math.sin(time + node.x) * 5;
-              ctx.fillStyle = color;
-
               ctx.beginPath();
-              ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+              ctx.arc(
+                node.x,
+                node.y,
+                isHovered ? node.val * 1.5 : node.val,
+                0,
+                2 * Math.PI,
+              );
+              ctx.fillStyle = color;
+              ctx.shadowColor = color;
+              ctx.shadowBlur = isHovered ? 20 : 10;
               ctx.fill();
 
-              ctx.strokeStyle = color;
-              ctx.lineWidth = (isHovered ? 3 : 1.5) / globalScale;
-
-              for (let i = 0; i < spikes; i++) {
-                const speedMult = isHovered ? 0.6 : 0.2;
-                const angle = ((Math.PI * 2) / spikes) * i + time * speedMult;
-                const length =
-                  size * 1.8 + Math.sin(time * 3 + i + node.x) * (size * 0.5);
-
+              for (let i = 0; i < 5; i++) {
+                const angle = ((Math.PI * 2) / 5) * i + time * 0.2;
+                const len = node.val * 2 + Math.sin(time * 3 + i) * 3;
                 ctx.beginPath();
                 ctx.moveTo(node.x, node.y);
-                ctx.quadraticCurveTo(
-                  node.x + Math.cos(angle + 0.5) * length * 0.5,
-                  node.y + Math.sin(angle + 0.5) * length * 0.5,
-                  node.x + Math.cos(angle) * length,
-                  node.y + Math.sin(angle) * length,
+                ctx.lineTo(
+                  node.x + Math.cos(angle) * len,
+                  node.y + Math.sin(angle) * len,
                 );
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1 / globalScale;
                 ctx.stroke();
               }
-              ctx.restore();
             }
-
             ctx.globalAlpha = 1;
           }}
         />
       </div>
+
       <div
         className={`absolute top-8 left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-all duration-1000 flex items-center gap-3 bg-zinc-900/80 backdrop-blur-md border border-white/10 px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] ${
           showHint ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"

@@ -81,7 +81,7 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 relative">
+      <div className="w-full max-w-[95vw] 2xl:max-w-[1800px] flex flex-col lg:flex-row gap-6 relative">
         <div className="flex-1 flex flex-col gap-4 transition-all duration-300">
           <NoteInput onNoteAdded={handleNoteAdded} />
 

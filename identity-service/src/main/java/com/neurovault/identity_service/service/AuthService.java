@@ -25,10 +25,8 @@ public class AuthService {
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        // Kaydedip ID'nin oluşmasını sağlıyoruz
         User savedUser = userRepository.save(user);
 
-        // YENİ: Tüm objeyi gönderiyoruz
         return jwtService.generateToken(savedUser);
     }
 
@@ -40,7 +38,6 @@ public class AuthService {
             throw new RuntimeException("Hatalı şifre!");
         }
 
-        // YENİ: Tüm objeyi gönderiyoruz
         return jwtService.generateToken(user);
     }
 
@@ -59,7 +56,6 @@ public class AuthService {
         }
 
         User updatedUser = userRepository.save(user);
-        // Güncellenmiş bilgilerle yepyeni bir token üretip dönüyoruz
         return jwtService.generateToken(updatedUser);
     }
 }

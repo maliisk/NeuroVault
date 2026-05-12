@@ -22,8 +22,8 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
         User user = new User();
-        user.setFirstName(request.getFirstName()); // YENİ
-        user.setLastName(request.getLastName()); // YENİ
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
         user.setPassword(request.getPassword());
         user.setRole("ROLE_USER");
@@ -40,10 +40,7 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<User> getCurrentUser(@RequestHeader("Authorization") String token) {
-        // Şimdilik basitlik adına frontend email'i de gönderebilir
-        // ama profesyonelce olan JWT'den email'i çekmektir.
-        // Bu kısmı frontend'den gelen istekte header kullanarak yöneteceğiz.
-        return ResponseEntity.ok().build(); // Şimdilik iskelet, aşağıda frontend ile bağlayacağız
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/update")

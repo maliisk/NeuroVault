@@ -3,10 +3,9 @@ package com.neurovault.identity_service.dto;
 public class UserUpdateRequest {
     private String firstName;
     private String lastName;
-    private String currentPassword; // Şifre değişikliği için güvenlik teyidi
+    private String currentPassword;
     private String newPassword;
 
-    // Getter ve Setter'lar
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
     public String getLastName() { return lastName; }

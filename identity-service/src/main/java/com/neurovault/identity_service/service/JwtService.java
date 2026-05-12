@@ -22,10 +22,8 @@ public class JwtService {
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
 
-    // YENİ: String email yerine User objesi alıyoruz
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        // JWT'nin payload kısmına kullanıcı bilgilerini ekliyoruz
         claims.put("id", user.getId());
         claims.put("firstName", user.getFirstName());
         claims.put("lastName", user.getLastName());
@@ -34,7 +32,6 @@ public class JwtService {
         return createToken(claims, user.getEmail());
     }
 
-    // Token'ı çözüp içindeki email adresini (Subject) çıkaran metod
     public String extractEmail(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSignKey())

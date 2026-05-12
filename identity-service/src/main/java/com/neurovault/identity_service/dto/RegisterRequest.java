@@ -1,8 +1,8 @@
 package com.neurovault.identity_service.dto;
 
 public class RegisterRequest {
-    private String firstName; // YENİ
-    private String lastName; // YENİ
+    private String firstName;
+    private String lastName;
     private String email;
     private String password;
 

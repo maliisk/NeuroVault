@@ -26,26 +26,22 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // İstekteki Authorization başlığını (Token'ı) yakala
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7); // "Bearer " kısmını at
+            String token = authHeader.substring(7);
             try {
                 String email = jwtService.extractEmail(token);
 
-                // Eğer email başarıyla çözüldüyse, kullanıcıyı Spring Security'ye "Giriş Yapmış" olarak tanıt
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(email, null, new ArrayList<>());
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             } catch (Exception e) {
-                // Token geçersiz veya süresi dolmuşsa bir şey yapma, 403 dönecektir.
             }
         }
 
-        // İsteği yoluna (Controller'a) devam ettir
         filterChain.doFilter(request, response);
     }
 }

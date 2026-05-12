@@ -18,7 +18,7 @@ import java.util.List;
 @EnableWebSecurity
 public class AuthConfig {
 
-    private final JwtFilter jwtFilter; // YENİ: Filtremizi enjekte ediyoruz
+    private final JwtFilter jwtFilter;
 
     public AuthConfig(JwtFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
@@ -33,7 +33,6 @@ public class AuthConfig {
                         .requestMatchers("/auth/register", "/auth/login").permitAll()
                         .anyRequest().authenticated()
                 )
-                // YENİ: İstekler Controller'a gitmeden önce bizim JwtFilter'dan geçmek zorunda!
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
